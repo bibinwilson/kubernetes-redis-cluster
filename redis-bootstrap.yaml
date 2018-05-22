@@ -1,0 +1,46 @@
+apiVersion: v1
+  kind: Pod
+  metadata:
+    labels:
+      name: redis
+      redis-sentinel: "true"
+      role: master
+    name: redis-bootstrap
+  spec:
+    containers:
+      - name: redis
+        image: bibinwilson/redis:32
+        env:
+          - name: MASTER
+            value: "true"
+          - name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: password
+                name: redispassword
+        ports:
+          - containerPort: 6379
+        resources:
+          limits:
+            cpu: "0.1"
+        volumeMounts:
+          - mountPath: /redis-master-data
+            name: data
+      - name: sentinel
+        image: bibinwilson/redis:32
+        env:
+          - name: SENTINEL
+            value: "true"
+          - name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: password
+                name: redispassword
+        ports:
+          - containerPort: 26379
+        volumeMounts:
+          - mountPath: /redis-sentinel-data
+            name: data
+    volumes:
+      - name: data
+        emptyDir: {}
