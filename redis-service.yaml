@@ -5,7 +5,7 @@ metadata:
     name: redis
     role: service
   name: redis
-  namespace: cx-stores-dispositionmanager-perf
+  namespace: redis-cluster
 spec:
   clusterIP: 
   ports:
