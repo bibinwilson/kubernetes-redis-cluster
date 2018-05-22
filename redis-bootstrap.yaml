@@ -26,11 +26,6 @@ spec:
       env:
         - name: SENTINEL
           value: "true"
-        - name: REDIS_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              key: password
-              name: redispassword
       ports:
         - containerPort: 26379
       volumeMounts:
