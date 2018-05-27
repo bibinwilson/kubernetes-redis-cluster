@@ -11,6 +11,6 @@ COPY run.sh /run.sh
 
 RUN chmod 755 /run.sh
 
+EXPOSE 26379
 CMD [ "/run.sh" ]
-
 ENTRYPOINT [ "bash", "-c" ]
