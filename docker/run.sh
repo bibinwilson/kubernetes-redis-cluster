@@ -14,30 +14,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-REDIS_PASSWORD=$(eval echo $REDIS_PASSWORD)
-
 function launchmaster() {
   if [[ ! -e /redis-master-data ]]; then
     echo "Redis master data doesn't exist, data won't be persistent!"
     mkdir /redis-master-data
   fi
-  sed -i 's/%master-auth%/'$REDIS_PASSWORD'/' /redis-master/redis.conf
   redis-server /redis-master/redis.conf
 }
 
 function launchsentinel() {
   while true; do
-    echo "DEBUG-BB: print the variables "${REDIS_SENTINEL_SERVICE_HOST}" "${REDIS_SENTINEL_SERVICE_PORT}
-    echo "DEBUG-BB: ouput of command "$(redis-cli -h ${REDIS_SENTINEL_SERVICE_HOST} -p ${REDIS_SENTINEL_SERVICE_PORT} --csv SENTINEL get-master-addr-by-name mymaster)
     master=$(redis-cli -h ${REDIS_SENTINEL_SERVICE_HOST} -p ${REDIS_SENTINEL_SERVICE_PORT} --csv SENTINEL get-master-addr-by-name mymaster | tr ',' ' ' | cut -d' ' -f1)
-    echo "DEBUG-BB: master value assigned "${master}
     if [[ -n ${master} ]]; then
       master="${master//\"}"
     else
-      #master="${REDIS_MASTER_SERVICE_HOST}"
-      master=$(hostname -i)
+      master="${REDIS_MASTER_SERVICE_HOST}"
     fi
-    echo "DEBUG-BB: Final master value print this "${master}
+
     redis-cli -h ${master} INFO
     if [[ "$?" == "0" ]]; then
       break
@@ -47,20 +40,17 @@ function launchsentinel() {
   done
 
   sentinel_conf=/redis-sentinel/sentinel.conf
+
   echo "sentinel monitor mymaster ${master} 6379 2" > ${sentinel_conf}
-  echo "sentinel down-after-milliseconds mymaster 8000" >> ${sentinel_conf}
-  echo "sentinel auth-pass mymaster ${REDIS_PASSWORD}" >> ${sentinel_conf}
-  echo "sentinel failover-timeout mymaster 15000" >> ${sentinel_conf}
+  echo "sentinel down-after-milliseconds mymaster 60000" >> ${sentinel_conf}
+  echo "sentinel failover-timeout mymaster 180000" >> ${sentinel_conf}
   echo "sentinel parallel-syncs mymaster 1" >> ${sentinel_conf}
-  echo "bind 0.0.0.0" >> ${sentinel_conf}
-  echo "tcp-backlog 50" >> ${sentinel_conf}
 
   redis-sentinel ${sentinel_conf}
 }
 
 function launchslave() {
   while true; do
-    echo "DEBUG-BB: print the variables "${REDIS_SENTINEL_SERVICE_HOST}" "${REDIS_SENTINEL_SERVICE_PORT}
     master=$(redis-cli -h ${REDIS_SENTINEL_SERVICE_HOST} -p ${REDIS_SENTINEL_SERVICE_PORT} --csv SENTINEL get-master-addr-by-name mymaster | tr ',' ' ' | cut -d' ' -f1)
     if [[ -n ${master} ]]; then
       master="${master//\"}"
@@ -78,7 +68,6 @@ function launchslave() {
   done
   sed -i "s/%master-ip%/${master}/" /redis-slave/redis.conf
   sed -i "s/%master-port%/6379/" /redis-slave/redis.conf
-  sed -i 's/%master-auth%/'$REDIS_PASSWORD'/' /redis-slave/redis.conf
   redis-server /redis-slave/redis.conf
 }
 
