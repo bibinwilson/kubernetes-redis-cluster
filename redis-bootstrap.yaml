@@ -9,7 +9,7 @@ metadata:
 spec:
   containers:
     - name: redis
-      image: bibinwilson/redis:4
+      image: bibinwilson/redis:4.1
       env:
         - name: MASTER
           value: "true"
@@ -22,7 +22,7 @@ spec:
         - mountPath: /redis-master-data
           name: data
     - name: sentinel
-      image: bibinwilson/redis:4
+      image: bibinwilson/redis:4.1
       env:
         - name: SENTINEL
           value: "true"

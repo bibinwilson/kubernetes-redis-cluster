@@ -25,7 +25,7 @@ spec:
           initialDelaySeconds: 15
           timeoutSeconds: 1
           periodSeconds: 15
-        image: bibinwilson/redis:4
+        image: bibinwilson/redis:4.1
         ports:
         - containerPort: 6379
           protocol: TCP
